@@ -301,6 +301,8 @@
     .final { padding: 44px 20px; }
   }
 </style>
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
 </head>
 <body>
 
@@ -438,6 +440,15 @@
     const seed = Math.floor(Math.random() * 100000);
     const sky = ['day', 'dusk', 'night'][Math.floor(Math.random() * 3)];
     document.getElementById(id).href = `app/#seed=${seed}&sky=${sky}&view=chase`;
+  }
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch((error) => {
+        console.warn('Service worker registration failed:', error);
+      });
+    });
   }
 </script>
 </body>
