@@ -445,9 +445,24 @@
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js').catch((error) => {
-        console.warn('Service worker registration failed:', error);
-      });
+      navigator.serviceWorker.register('./sw.js')
+        .then(() => navigator.serviceWorker.ready)
+        .then((registration) => {
+          const worker = registration.active;
+          if (!worker) return;
+          // Report same-origin assets fetched before the worker took control (workerStart 0, e.g. on the
+          // first visit) so it can cache them for offline use; requests it handled are cached already.
+          worker.postMessage({ type: 'CACHE_URLS', urls: [location.href] });
+          new PerformanceObserver((list) => {
+            const urls = list.getEntries()
+              .filter((entry) => (entry).workerStart === 0)
+              .map((entry) => entry.name);
+            if (urls.length) worker.postMessage({ type: 'CACHE_URLS', urls });
+          }).observe({ type: 'resource', buffered: true });
+        })
+        .catch((error) => {
+          console.warn('Service worker registration failed:', error);
+        });
     });
   }
 </script>
